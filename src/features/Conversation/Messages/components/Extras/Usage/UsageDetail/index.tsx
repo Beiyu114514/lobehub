@@ -6,6 +6,7 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import InfoTooltip from '@/components/InfoTooltip';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { aiModelSelectors, useAiInfraStore } from '@/store/aiInfra';
 import { useGlobalStore } from '@/store/global';
 import { systemStatusSelectors } from '@/store/global/selectors';
@@ -30,6 +31,7 @@ interface TokenDetailProps {
 
 const TokenDetail = memo<TokenDetailProps>(({ usage, performance, model, provider }) => {
   const { t } = useTranslation('chat');
+  const isMobile = useIsMobile();
 
   // Use systemStatus to manage short-format display state
   const isShortFormat = useGlobalStore(systemStatusSelectors.tokenDisplayFormatShort);
@@ -152,7 +154,7 @@ const TokenDetail = memo<TokenDetailProps>(({ usage, performance, model, provide
   return (
     <Popover
       placement={'top'}
-      trigger="hover"
+      trigger={isMobile ? 'click' : 'hover'}
       content={
         <Flexbox gap={8} style={{ minWidth: 200 }}>
           {modelCard && <ModelCard {...modelCard} provider={provider} />}
@@ -246,12 +248,16 @@ const TokenDetail = memo<TokenDetailProps>(({ usage, performance, model, provide
         horizontal
         gap={2}
         style={{ cursor: 'pointer', fontVariantNumeric: 'tabular-nums' }}
-        onClick={(e) => {
-          // Prevent Popover from closing and toggle the format
-          e.preventDefault();
-          e.stopPropagation();
-          updateSystemStatus({ tokenDisplayFormatShort: !isShortFormat });
-        }}
+        onClick={
+          isMobile
+            ? undefined
+            : (e) => {
+                // Prevent Popover from closing and toggle the format
+                e.preventDefault();
+                e.stopPropagation();
+                updateSystemStatus({ tokenDisplayFormatShort: !isShortFormat });
+              }
+        }
       >
         <Icon icon={isShowCredit ? BadgeCent : CoinsIcon} />
         <AnimatedNumber

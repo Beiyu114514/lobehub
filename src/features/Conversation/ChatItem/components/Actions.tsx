@@ -25,13 +25,25 @@ const Actions = memo<ActionsProps>(({ actionAddon, placement, actions }) => {
       align={'center'}
       direction={'horizontal'}
       gap={4}
+      // The row is content-sized inside a flex-start column, so without a cap it
+      // overflows its lane instead of yielding: on a narrow viewport the model +
+      // token-usage cluster in `actions` would run past the right edge.
       style={{
         alignSelf: isUser ? 'flex-end' : 'flex-start',
+        maxInlineSize: '100%',
+        minInlineSize: 0,
       }}
     >
       {!isUser && actionAddon}
       {actions && (
-        <Flexbox horizontal align={'center'} role="menubar">
+        // Let the action buttons and the usage cluster stack on two lines when
+        // they don't fit side by side (mobile), rather than overflowing.
+        <Flexbox
+          horizontal
+          align={'center'}
+          role="menubar"
+          style={{ flexWrap: 'wrap', minWidth: 0 }}
+        >
           {actions}
         </Flexbox>
       )}

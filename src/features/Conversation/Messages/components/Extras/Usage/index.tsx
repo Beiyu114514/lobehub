@@ -31,7 +31,14 @@ export const styles = stylex.create({
     color: cssVar.colorTextQuaternary,
     fontVariantNumeric: 'tabular-nums',
     whiteSpace: 'nowrap',
+    // Allow the row to yield to a narrow viewport instead of overflowing it.
+    minWidth: 0,
   },
+  // The model + speed cluster is the part that gives way first; the token count
+  // cluster stays whole so the usage figure is never clipped.
+  modelCluster: { minWidth: 0 },
+  modelName: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  fixed: { flexShrink: 0 },
 });
 
 // Cheap messages don't need a cost callout — only surface it once it's
@@ -99,41 +106,56 @@ const Usage = memo<UsageProps>(({ model, usage, performance, provider }) => {
           neighbouring coin, so the reader can't tell what the number measures.
           TTFT rides in the hover instead of taking a second inline slot — it's a
           diagnostic, not an at-a-glance metric. */}
-      <Center horizontal gap={6} style={{ fontSize: 12 }}>
-        <Center horizontal gap={4}>
-          {heteroName || (
+      <Center
+        horizontal
+        className={stylex.props(styles.modelCluster).className}
+        gap={6}
+        style={{ fontSize: 12 }}
+      >
+        <Center horizontal className={stylex.props(styles.modelCluster).className} gap={4}>
+          {heteroName ? (
+            <span className={stylex.props(styles.modelName).className}>{heteroName}</span>
+          ) : (
             <>
-              <ModelIcon model={displayModel} type={'mono'} />
-              {modelCard?.displayName || displayModel}
+              <span className={stylex.props(styles.fixed).className}>
+                <ModelIcon model={displayModel} type={'mono'} />
+              </span>
+              <span className={stylex.props(styles.modelName).className}>
+                {modelCard?.displayName || displayModel}
+              </span>
             </>
           )}
         </Center>
         {!!performance?.tps && (
           <>
-            <span>·</span>
-            <Tooltip
-              title={
-                <Flexbox gap={6}>
-                  <span>{t('messages.tokenDetails.speed.tps.tooltip')}</span>
-                  {!!performance.ttft && (
-                    <Flexbox horizontal gap={12} justify={'space-between'}>
-                      <span>{t('messages.tokenDetails.speed.ttft.title')}</span>
-                      <span>{formatNumber(performance.ttft / 1000, 2)}s</span>
-                    </Flexbox>
-                  )}
-                </Flexbox>
-              }
-            >
-              <Center horizontal gap={4}>
-                <span>{formatNumber(performance.tps, 1)}</span>
-                <span>{t('messages.tokenDetails.speed.tps.title')}</span>
-              </Center>
-            </Tooltip>
+            <span className={stylex.props(styles.fixed).className}>·</span>
+            {/* The wrapper is the flex item, so freezing it here keeps the speed
+                from shrinking even if Tooltip adds its own element. */}
+            <span className={stylex.props(styles.fixed).className}>
+              <Tooltip
+                title={
+                  <Flexbox gap={6}>
+                    <span>{t('messages.tokenDetails.speed.tps.tooltip')}</span>
+                    {!!performance.ttft && (
+                      <Flexbox horizontal gap={12} justify={'space-between'}>
+                        <span>{t('messages.tokenDetails.speed.ttft.title')}</span>
+                        <span>{formatNumber(performance.ttft / 1000, 2)}s</span>
+                      </Flexbox>
+                    )}
+                  </Flexbox>
+                }
+              >
+                <Center horizontal gap={4}>
+                  <span>{formatNumber(performance.tps, 1)}</span>
+                  <span>{t('messages.tokenDetails.speed.tps.title')}</span>
+                </Center>
+              </Tooltip>
+            </span>
           </>
         )}
       </Center>
 
-      <Center horizontal gap={8}>
+      <Center horizontal className={stylex.props(styles.fixed).className} gap={8}>
         {!!usage?.totalTokens && (
           <TokenDetail
             model={displayModel}
